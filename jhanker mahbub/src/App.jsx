@@ -1,13 +1,19 @@
 import { initializeApp } from "firebase/app";
 import firebaseConfig from "./firebaseConfig";
-import { getAuth, signInWithPopup, GoogleAuthProvider, signOut } from "firebase/auth";
-import { useState } from "react";
+import {
+  getAuth,
+  signInWithPopup,
+  GoogleAuthProvider,
+  signOut,
+} from "firebase/auth";
+import { isValidElement, useState } from "react";
 
 const initalState = {
   isSignedIn: false,
   name: "",
   email: "",
-  photoURL: "",
+  password: "",
+  photoURL: ""
 };
 
 const app = initializeApp(firebaseConfig);
@@ -40,15 +46,37 @@ function App() {
       });
   };
 
-
   const handleSignOut = () => {
     const auth = getAuth();
-    signOut(auth).then(() => {
-      setUser(initalState)
-    }).catch((error) => {
-      // An error happened.
-    });
-  }
+    signOut(auth)
+      .then(() => {
+        setUser(initalState);
+      })
+      .catch((error) => {
+        // An error happened.
+      });
+  };
+
+  const handleSubmit = () => {};
+
+  const handleChange = (e) => {
+    let isFormValid
+    if (e.target.name === "email") {
+      isFormValid = /\S+@\S+\.\S+/.test(e.target.value);
+      // console.log(isEmailValid)
+    }
+    if (e.target.name === "password") {
+      isFormValid = e.target.value.length > 6;
+    }
+    if(e.target.name === "name"){
+      isFormValid = e.target.value
+    }
+    if(isFormValid){
+      const newUserInfo = {...user}
+      newUserInfo[e.target.name] = e.target.value
+      setUser(newUserInfo) 
+    }
+  };
   return (
     <>
       <div className="app">
@@ -65,6 +93,34 @@ function App() {
             <img src={user.photoURL} alt="" />
           </div>
         )}
+        <h1>Our own Authentication system</h1>
+        <p>Name: {user.name}</p>
+        <p>Email: {user.email}</p>
+        <p>password: {user.password}</p>
+        <form onSubmit={handleSubmit}>
+          <input onBlur={handleChange} type="text" name="name" placeholder="Your name"/>
+          <br />
+          <br />
+          <input
+            type="text"
+            name="email"
+            onBlur={handleChange}
+            placeholder="Email"
+            required
+          />
+          <br />
+          <br />
+          <input
+            type="password"
+            name="password"
+            onBlur={handleChange}
+            placeholder="password"
+            required
+          />
+          <br />
+          <br />
+          <input type="submit" value="Submit"></input>
+        </form>
       </div>
     </>
   );
