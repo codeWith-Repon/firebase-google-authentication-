@@ -5,6 +5,7 @@ import {
   signInWithPopup,
   GoogleAuthProvider,
   signOut,
+  createUserWithEmailAndPassword,
 } from "firebase/auth";
 import { isValidElement, useState } from "react";
 
@@ -13,7 +14,9 @@ const initalState = {
   name: "",
   email: "",
   password: "",
-  photoURL: ""
+  photoURL: "",
+  error: "",
+  success: false,
 };
 
 const app = initializeApp(firebaseConfig);
@@ -57,10 +60,30 @@ function App() {
       });
   };
 
-  const handleSubmit = () => {};
+  const handleSubmit = (e) => {
+    // console.log(user)
+    e.preventDefault();
+    if (user.email && user.password) {
+      const auth = getAuth();
+      createUserWithEmailAndPassword(auth, user.email, user.password)
+        .then((userCredential) => {
+          const newUserInfo = {...user}
+          newUserInfo.error = ""
+          newUserInfo.success = true
+          // ...
+          setUser(newUserInfo)
+        })
+        .catch((error) => {
+          const newUserInfo = {...user}
+          newUserInfo.error = error.message
+          newUserInfo.success = false
+          setUser(newUserInfo)
+        });
+    }
+  };
 
   const handleChange = (e) => {
-    let isFormValid
+    let isFormValid;
     if (e.target.name === "email") {
       isFormValid = /\S+@\S+\.\S+/.test(e.target.value);
       // console.log(isEmailValid)
@@ -68,13 +91,13 @@ function App() {
     if (e.target.name === "password") {
       isFormValid = e.target.value.length > 6;
     }
-    if(e.target.name === "name"){
-      isFormValid = e.target.value
+    if (e.target.name === "name") {
+      isFormValid = e.target.value;
     }
-    if(isFormValid){
-      const newUserInfo = {...user}
-      newUserInfo[e.target.name] = e.target.value
-      setUser(newUserInfo) 
+    if (isFormValid) {
+      const newUserInfo = { ...user };
+      newUserInfo[e.target.name] = e.target.value;
+      setUser(newUserInfo);
     }
   };
   return (
@@ -94,11 +117,13 @@ function App() {
           </div>
         )}
         <h1>Our own Authentication system</h1>
-        <p>Name: {user.name}</p>
-        <p>Email: {user.email}</p>
-        <p>password: {user.password}</p>
         <form onSubmit={handleSubmit}>
-          <input onBlur={handleChange} type="text" name="name" placeholder="Your name"/>
+          <input
+            onBlur={handleChange}
+            type="text"
+            name="name"
+            placeholder="Your name"
+          />
           <br />
           <br />
           <input
@@ -121,6 +146,9 @@ function App() {
           <br />
           <input type="submit" value="Submit"></input>
         </form>
+        <p style={{color: "red"}}>{user.error}</p>
+        {user.success &&
+        <p style={{color: "green"}}>User created</p>}
       </div>
     </>
   );
