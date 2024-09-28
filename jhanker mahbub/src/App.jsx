@@ -6,6 +6,7 @@ import {
   GoogleAuthProvider,
   signOut,
   createUserWithEmailAndPassword,
+  signInWithEmailAndPassword,
 } from "firebase/auth";
 import { isValidElement, useState } from "react";
 
@@ -23,6 +24,7 @@ const app = initializeApp(firebaseConfig);
 
 function App() {
   const [user, setUser] = useState(initalState);
+  const [newUser, setNewUser] = useState(false)
 
   const provider = new GoogleAuthProvider();
   const handleSignIn = () => {
@@ -63,7 +65,7 @@ function App() {
   const handleSubmit = (e) => {
     // console.log(user)
     e.preventDefault();
-    if (user.email && user.password) {
+    if (newUser && user.email && user.password) {
       const auth = getAuth();
       createUserWithEmailAndPassword(auth, user.email, user.password)
         .then((userCredential) => {
@@ -79,6 +81,25 @@ function App() {
           newUserInfo.success = false
           setUser(newUserInfo)
         });
+    }
+
+    if(!newUser && user.email && user.password){
+      const auth = getAuth();
+      signInWithEmailAndPassword(auth, user.email, user.password)
+      .then((userCredential) => {
+      // Signed in 
+      const newUserInfo = {...user}
+          newUserInfo.error = ""
+          newUserInfo.success = true
+          setUser(newUserInfo)
+     // ...
+     })
+  .catch((error) => {
+    const newUserInfo = {...user}
+    newUserInfo.error = error.message
+    newUserInfo.success = false
+    setUser(newUserInfo)
+  });
     }
   };
 
@@ -118,12 +139,17 @@ function App() {
         )}
         <h1>Our own Authentication system</h1>
         <form onSubmit={handleSubmit}>
+          <input  onChange={()=>setNewUser(!newUser)} type="checkbox" name="newUser" />
+          <label htmlFor="newUser">New user singn up</label>
+          <br />
+          {newUser && 
           <input
             onBlur={handleChange}
             type="text"
             name="name"
             placeholder="Your name"
           />
+          }
           <br />
           <br />
           <input
@@ -148,7 +174,7 @@ function App() {
         </form>
         <p style={{color: "red"}}>{user.error}</p>
         {user.success &&
-        <p style={{color: "green"}}>User created</p>}
+        <p style={{color: "green"}}>User {newUser ? "created" : "Logd in"}</p>}
       </div>
     </>
   );
